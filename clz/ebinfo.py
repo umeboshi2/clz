@@ -1,3 +1,4 @@
+from .base import make_picture_url
 from .desc import make_description
 
 def makeCommonData(config):
@@ -12,7 +13,7 @@ def makeCommonData(config):
             rlocation = True
             need_rlocation = False
     if not rlocation:
-        optfields = [o.lower() for o in config.section('optfields')]
+        optfields = [o.lower() for o in config.options('optfields')]
         if 'postalcode' not in optfields:
             raise RuntimeError, "need postal code if not using location"
         code = config.get('optfields', 'postalcode')
@@ -26,8 +27,9 @@ def makeEbayInfo(config, comic):
     data = makeCommonData(config)
     Title = comic.series.displayname.string
     Subtitle = comic.fulltitle.string
-    PicURL = make_picture_url(comic.coverfront.string)
-    Description = makeEbayDescription(comic)
+    urlprefix = config.get('main', 'urlprefix')
+    PicURL = make_picture_url(comic.coverfront.string, urlprefix)
+    Description = make_description(config, comic)
     Quantity = int(comic.quantity.string)
     ndata = dict(Title=Title,
                 Subtitle=Subtitle,
@@ -36,5 +38,9 @@ def makeEbayInfo(config, comic):
                 Quantity=Quantity,
     )
     ndata['Product:Brand'] = comic.publisher.displayname.string
+    if comic.isbn is not None:
+        ndata['Product:ISBN'] = comic.isbn.string
+    if comic.barcode is not None:
+        ndata['Product:UPC'] = comic.barcode.string
     data.update(ndata)
     return data
