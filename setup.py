@@ -19,6 +19,9 @@ setup(name='clz',
       zip_safe=False,
       install_requires=[
           # -*- Extra requirements: -*-
+          'beautifulsoup4',
+          'Mako',
+          'requests',
       ],
       entry_points="""
       # -*- Entry points: -*-
