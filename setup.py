@@ -20,6 +20,7 @@ setup(name='clz',
       install_requires=[
           # -*- Extra requirements: -*-
           'beautifulsoup4',
+          'lxml',
           'Mako',
           'requests',
       ],
