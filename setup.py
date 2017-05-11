@@ -24,7 +24,9 @@ setup(name='clz',
           'Mako',
           'requests',
       ],
-      entry_points="""
+      entry_points="""\
       # -*- Entry points: -*-
+      [console_scripts]
+      make_ebay_csv = clz.scripts.makecsv:main
       """,
       )
