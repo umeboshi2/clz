@@ -4,7 +4,7 @@ MAXDESCRIPTIONLENGTH = 32765
 
 def make_description(config, comic):
     templatefile = config.get('main', 'template')
-    t = Template(templatefile)
+    t = Template(file(templatefile).read())
     desc = t.render(comic=comic)
     desc = desc.replace('\n', '')
     if len(desc) > MAXDESCRIPTIONLENGTH:
