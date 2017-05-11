@@ -51,7 +51,8 @@ def make_ebay_csv(fields, comics, config):
     if ropts[0] != 'action':
         raise RuntimeError, "No action found in config!"
     reqfields = ['*%s' % o.capitalize() for o in ropts]
-    fields = reqfields + [f for f in fields if f not in reqfields]
+    optfields = config.options('optfields')
+    fields = reqfields + optfields + [f for f in fields if f not in reqfields]
     ofile = StringIO.StringIO()
     writer = csv.DictWriter(ofile, fields)
     writer.writeheader()
@@ -83,8 +84,18 @@ opts, args = parser.parse_args(sys.argv[1:])
 config.read([opts.config])
 
 
-
-
+def show_csv(text):
+    import Tkinter
+    root = Tkinter.Tk()
+    s = Tkinter.Scrollbar(root)
+    t = Tkinter.Text(root, height=34, width=250)
+    s.pack(side=Tkinter.RIGHT, fill=Tkinter.Y)
+    t.pack(side=Tkinter.LEFT, fill=Tkinter.Y)
+    s.config(command=t.yview)
+    t.config(yscrollcommand=s.set)
+    t.insert(Tkinter.END, text)
+    Tkinter.mainloop()
+    
 def main():
     if not len(args):
         raise RuntimeError, "Need to pass an xml file as an argument."
@@ -98,7 +109,8 @@ def main():
     cc = make_ebay_csv(EbayFields, comics, config)
 
     if opts.output is None:
-        sys.stdout.write(cc.read())
+        #sys.stdout.write(cc.read())
+        show_csv(cc.read())
     else:
         filename = opts.output
         sys.stderr.write("Writing %s\n" % filename)

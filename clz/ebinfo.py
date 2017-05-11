@@ -5,7 +5,6 @@ from .categoryids import make_superhero_table
 # These are not required fields!
 EbayFields = ['Title', 'Subtitle', 'PicURL',
               'Description', 'Product:Brand',
-              'PostalCode',
               'Product:UPC',
               'Product:ISBN',
 ]
@@ -30,6 +29,8 @@ def makeCommonData(config):
         need_rlocation = False
     if need_rlocation and not rlocation:
         raise RuntimeError, "another problem"
+    for field in config.options('optfields'):
+        CommonData[field] = config.get('optfields', field)
     return CommonData
 
 def make_age_range(config, age):
@@ -82,8 +83,15 @@ def make_title(comic):
 
 
 def make_subtitle(comic):
-    return comic.fulltitle.string
-
+    if comic.fulltitle is not None:
+        subtitle =  comic.fulltitle.string
+    elif comic.edition is not None:
+        subtitle = comic.edition.displayname.string
+    elif comic.description is not None:
+        subtitle = comic.description.string
+    else:
+        import pdb ; pdb.set_trace()
+        
 def makeEbayInfo(config, comic, opts):
     data = makeCommonData(config)
     Title = make_title(comic)
