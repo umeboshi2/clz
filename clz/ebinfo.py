@@ -1,6 +1,13 @@
 from .base import make_picture_url
 from .desc import make_description
 
+EbayFields = ['Category','Title', 'Subtitle', 'PicURL',
+              'Description', 'Quantity', 'Product:Brand',
+              'Duration', 'PostalCode',
+              'Product:UPC',
+              'Product:ISBN',
+]
+
 def makeCommonData(config):
     CommonData = dict()
     # we will use PostalCode for location
@@ -30,12 +37,10 @@ def makeEbayInfo(config, comic):
     urlprefix = config.get('main', 'urlprefix')
     PicURL = make_picture_url(comic.coverfront.string, urlprefix)
     Description = make_description(config, comic)
-    Quantity = int(comic.quantity.string)
     ndata = dict(Title=Title,
                 Subtitle=Subtitle,
                 PicURL=PicURL,
                 Description=Description,
-                Quantity=Quantity,
     )
     ndata['Product:Brand'] = comic.publisher.displayname.string
     if comic.isbn is not None:
@@ -43,4 +48,7 @@ def makeEbayInfo(config, comic):
     if comic.barcode is not None:
         ndata['Product:UPC'] = comic.barcode.string
     data.update(ndata)
+    Quantity = int(comic.quantity.string)
+    if Quantity > config.getint('reqfields', 'quantity'):
+        data['*Quantity'] = Quantity
     return data
