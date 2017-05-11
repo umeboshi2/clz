@@ -1,9 +1,11 @@
 from .base import make_picture_url
 from .desc import make_description
+from .categoryids import make_superhero_table
 
-EbayFields = ['Category','Title', 'Subtitle', 'PicURL',
-              'Description', 'Quantity', 'Product:Brand',
-              'Duration', 'PostalCode',
+# These are not required fields!
+EbayFields = ['Title', 'Subtitle', 'PicURL',
+              'Description', 'Product:Brand',
+              'PostalCode',
               'Product:UPC',
               'Product:ISBN',
 ]
@@ -30,17 +32,69 @@ def makeCommonData(config):
         raise RuntimeError, "another problem"
     return CommonData
 
-def makeEbayInfo(config, comic):
+def make_age_range(config, age):
+    yrange = config.get('comic_ages', age)
+    start, end = [int(y.strip()) for y in yrange.split(',')]
+    return range(start, end + 1)
+    
+def find_age(config, year):
+    year = int(year)
+    ages = config.options('comic_ages')
+    for age in ages:
+        r = make_age_range(config, age)
+        if year in make_age_range(config, age):
+            return age
+    return None
+
+def get_category_id(config, comic, opts):
+    shtable = make_superhero_table(config)
+    heroidx = 4
+    ageidx = 1
+    catidx = 0
+    category = opts.category
+    year = comic.publicationdate.displayname.string
+    age = find_age(config, year)
+    if age is None:
+        raise RuntimeError, "Unknown age for year %s" % year
+    #print "YEAR", year, age
+    age_rows = [r for r in shtable if r[ageidx] == age]
+    other_row = [r for r in age_rows if r[heroidx].startswith('Other')]
+    if len(other_row) > 1:
+        raise RuntimeError, "too many other rows for age %s" % age
+    other_row = other_row[0]
+    seriesname = comic.series.displayname.string.lower()
+    found_row = other_row
+    for row in age_rows:
+        hero = row[heroidx].lower()
+        if hero in seriesname:
+            found_row = row
+            break
+    #print "Found Row is", found_row
+    if False and found_row[heroidx].startswith('Other'):
+        print "OTHER", seriesname
+    return found_row[catidx]
+
+def make_title(comic):
+    title = comic.series.displayname.string
+    if len(title) > 80:
+        raise RuntimeError, "Title too long %s" % comic.id.string
+    return title
+
+
+def make_subtitle(comic):
+    return comic.fulltitle.string
+
+def makeEbayInfo(config, comic, opts):
     data = makeCommonData(config)
-    Title = comic.series.displayname.string
-    Subtitle = comic.fulltitle.string
+    Title = make_title(comic)
+    Subtitle = make_subtitle(comic)
     urlprefix = config.get('main', 'urlprefix')
     PicURL = make_picture_url(comic.coverfront.string, urlprefix)
     Description = make_description(config, comic)
     ndata = dict(Title=Title,
-                Subtitle=Subtitle,
-                PicURL=PicURL,
-                Description=Description,
+                 Subtitle=Subtitle,
+                 PicURL=PicURL,
+                 Description=Description,
     )
     ndata['Product:Brand'] = comic.publisher.displayname.string
     if comic.isbn is not None:
@@ -51,4 +105,5 @@ def makeEbayInfo(config, comic):
     Quantity = int(comic.quantity.string)
     if Quantity > config.getint('reqfields', 'quantity'):
         data['*Quantity'] = Quantity
+    data['*Category'] = get_category_id(config, comic, opts)
     return data
