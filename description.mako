@@ -21,5 +21,4 @@ A ${year} ${genre} comic from ${publisher}.<br>
 Plot:<br>
 ${plot}
 %endif
-<% print 50*"$" %>
 </div>
