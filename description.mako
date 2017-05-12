@@ -1,6 +1,6 @@
 <div>
 <% plot = None %>
-%if comic.plot is not None:
+%if comic.plot is not None and comic.plot.string is not None:
 <% plot = comic.plot.string %>
 <% plot = plot.replace('\n', '<br>') %>
 %endif
