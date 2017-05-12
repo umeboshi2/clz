@@ -1,6 +1,7 @@
 from .base import make_picture_url
 from .desc import make_description
 from .categoryids import make_superhero_table
+from .clzpix import get_cover_url
 
 # These are not required fields!
 EbayFields = ['Title', 'Subtitle', 'PicURL',
@@ -97,7 +98,8 @@ def makeEbayInfo(config, comic, opts):
     Title = make_title(comic)
     Subtitle = make_subtitle(comic)
     urlprefix = config.get('main', 'urlprefix')
-    PicURL = make_picture_url(comic.coverfront.string, urlprefix)
+    #PicURL = make_picture_url(comic.coverfront.string, urlprefix)
+    PicURL = get_cover_url(comic)
     Description = make_description(config, comic)
     ndata = dict(Title=Title,
                  Subtitle=Subtitle,
