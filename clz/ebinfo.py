@@ -4,7 +4,7 @@ from .categoryids import make_superhero_table
 from .clzpix import get_cover_url
 
 # These are not required fields!
-EbayFields = ['Title', 'Subtitle', 'PicURL',
+EbayFields = ['Title', 'PicURL',
               'Description',
               'Product:UPC',
               'Product:ISBN',
