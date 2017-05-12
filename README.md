@@ -8,5 +8,5 @@ git clone https://github.com/umebohshi2/clz.git
 cd clz
 pip install -e .
 cp sampleconfig.ini config.ini
-make_ebay_csv <csvfile>
+make_ebay_csv -o <output.csv> <input.xml>
 ```
