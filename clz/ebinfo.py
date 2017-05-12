@@ -4,7 +4,7 @@ from .categoryids import make_superhero_table
 
 # These are not required fields!
 EbayFields = ['Title', 'Subtitle', 'PicURL',
-              'Description', 'Product:Brand',
+              'Description',
               'Product:UPC',
               'Product:ISBN',
 ]
@@ -104,7 +104,7 @@ def makeEbayInfo(config, comic, opts):
                  PicURL=PicURL,
                  Description=Description,
     )
-    ndata['Product:Brand'] = comic.publisher.displayname.string
+    #ndata['Product:Brand'] = comic.publisher.displayname.string
     if comic.isbn is not None:
         ndata['Product:ISBN'] = comic.isbn.string
     if comic.barcode is not None:
