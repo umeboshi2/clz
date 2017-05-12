@@ -92,6 +92,8 @@ def make_subtitle(comic):
         subtitle = comic.description.string
     else:
         import pdb ; pdb.set_trace()
+    return subtitle
+
         
 def makeEbayInfo(config, comic, opts):
     data = makeCommonData(config)
