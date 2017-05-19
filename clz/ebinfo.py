@@ -1,5 +1,5 @@
 from .base import make_picture_url
-from .desc import make_description
+from .desc import make_description, make_title
 from .categoryids import make_superhero_table
 from .clzpix import get_cover_url
 
@@ -76,12 +76,6 @@ def get_category_id(config, comic, opts):
         print "OTHER", seriesname
     return found_row[catidx]
 
-def make_title(comic):
-    title = comic.series.displayname.string
-    if len(title) > 80:
-        raise RuntimeError, "Title too long %s" % comic.id.string
-    return title
-
 
 def make_subtitle(comic):
     if comic.fulltitle is not None:
@@ -97,14 +91,12 @@ def make_subtitle(comic):
         
 def makeEbayInfo(config, comic, opts):
     data = makeCommonData(config)
-    Title = make_title(comic)
-    Subtitle = make_subtitle(comic)
+    Title = make_title(config, comic)
     urlprefix = config.get('main', 'urlprefix')
     #PicURL = make_picture_url(comic.coverfront.string, urlprefix)
     PicURL = get_cover_url(comic)
     Description = make_description(config, comic)
     ndata = dict(Title=Title,
-                 Subtitle=Subtitle,
                  PicURL=PicURL,
                  Description=Description,
     )
