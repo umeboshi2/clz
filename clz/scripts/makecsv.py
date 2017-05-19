@@ -3,12 +3,53 @@ from optparse import OptionParser
 import cStringIO as StringIO
 import csv
 
+from sqlalchemy import engine_from_config
+from sqlalchemy import and_, or_
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
+
 from clz.config import config
 from clz.xmlparse import get_comics
 from clz.desc import make_description
 from clz.categoryids import make_csv, get_categories
 from clz.categoryids import make_superhero_table
 from clz.ebinfo import makeEbayInfo, EbayFields
+
+from clz.database import Base
+from clz.clzpix import CoverUrlManager
+
+if 'OPENSHIFT_POSTGRESQL_DB_HOST' in os.environ:
+    dbhost = os.environ['OPENSHIFT_POSTGRESQL_DB_HOST']
+    dbport = os.environ['OPENSHIFT_POSTGRESQL_DB_PORT']
+    dbuser = os.environ['OPENSHIFT_POSTGRESQL_DB_USERNAME']
+    dbpass = os.environ['OPENSHIFT_POSTGRESQL_DB_PASSWORD']
+    dburl = "postgresql://%s:%s@%s:%s/leaflet"
+    dburl = dburl % (dbuser, dbpass, dbhost, dbport)
+else:
+    runtimedir_varname = 'XDG_RUNTIME_DIR'
+    if 'TMPHUBBYDB' in os.environ and runtimedir_varname in os.environ:
+        runtimedir = os.environ[runtimedir_varname]
+        hubbydir = os.path.join(runtimedir, 'hubby')
+        if not os.path.isdir(hubbydir):
+            os.makedirs(hubbydir)
+        dburl = "sqlite:///%(hubbydir)s/hubby.sqlite"
+        dburl = dburl % dict(hubbydir=hubbydir)
+
+    else:
+        #dburl = "postgresql://dbadmin@bard/leaflet"
+        dburl = "sqlite:///%(here)s/hubby.sqlite" % dict(here=os.getcwd())
+
+
+print "dburl", dburl
+settings = {'sqlalchemy.url' : dburl}
+engine = engine_from_config(settings)
+Base.metadata.create_all(engine)
+Session = sessionmaker()
+Session.configure(bind=engine)
+
+session = Session()
+cover_manager = CoverUrlManager(session)
 
 CATEGORYFILE = 'comic-categories.csv'
 CAT_PREFIX = 'Collectibles > Comics'
@@ -57,7 +98,7 @@ def make_ebay_csv(fields, comics, config):
     writer = csv.DictWriter(ofile, fields)
     writer.writeheader()
     for comic in comics:
-        ebinfo = makeEbayInfo(config, comic, opts)
+        ebinfo = makeEbayInfo(config, comic, opts, cover_manager)
         cdata = dict([(k,unicode(v).encode('utf-8')) for k,v in ebinfo.items() if k in fields])
         writer.writerow(cdata)
     ofile.seek(0)

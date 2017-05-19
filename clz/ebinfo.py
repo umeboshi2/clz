@@ -1,7 +1,6 @@
 from .base import make_picture_url
 from .desc import make_description, make_title
 from .categoryids import make_superhero_table
-from .clzpix import get_cover_url
 
 # These are not required fields!
 EbayFields = ['Title', 'PicURL',
@@ -54,7 +53,11 @@ def get_category_id(config, comic, opts):
     ageidx = 1
     catidx = 0
     category = opts.category
-    year = comic.publicationdate.displayname.string
+    try:
+        year = comic.publicationdate.displayname.string
+    except AttributeError:
+        #import pdb ; pdb.set_trace()
+        year = 2017
     age = find_age(config, year)
     if age is None:
         raise RuntimeError, "Unknown age for year %s" % year
@@ -89,12 +92,15 @@ def make_subtitle(comic):
     return subtitle
 
         
-def makeEbayInfo(config, comic, opts):
+def makeEbayInfo(config, comic, opts, mgr):
     data = makeCommonData(config)
     Title = make_title(config, comic)
     urlprefix = config.get('main', 'urlprefix')
     #PicURL = make_picture_url(comic.coverfront.string, urlprefix)
-    PicURL = get_cover_url(comic)
+    #PicURL = get_cover_url(comic)
+    ci = mgr.get_cover_image(comic)
+    
+    PicURL = ci.imgsrc
     Description = make_description(config, comic)
     ndata = dict(Title=Title,
                  PicURL=PicURL,

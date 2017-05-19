@@ -23,10 +23,12 @@ setup(name='clz',
           'lxml',
           'Mako',
           'requests',
+          'SQLAlchemy',
+          'transaction',
       ],
       entry_points="""\
       # -*- Entry points: -*-
       [console_scripts]
-      make_ebay_csv = clz.scripts.makecsv:main
+      make-ebay-csv = clz.scripts.makecsv:main
       """,
       )
