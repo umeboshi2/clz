@@ -1,3 +1,4 @@
+import sys
 from .base import make_picture_url
 from .desc import make_description, make_title
 from .categoryids import make_superhero_table
@@ -5,6 +6,7 @@ from .categoryids import make_superhero_table
 # These are not required fields!
 EbayFields = ['Title', 'PicURL',
               'Description',
+              'Product:EAN',
               'Product:UPC',
               'Product:ISBN',
 ]
@@ -107,10 +109,18 @@ def makeEbayInfo(config, comic, opts, mgr):
                  Description=Description,
     )
     #ndata['Product:Brand'] = comic.publisher.displayname.string
-    if comic.isbn is not None:
-        ndata['Product:ISBN'] = comic.isbn.string
+    upc_set = False
     if comic.barcode is not None:
         ndata['Product:UPC'] = comic.barcode.string
+        upc_set = True
+    if comic.isbn is not None:
+        if upc_set:
+            sys.stderr.write("Comic has barcode: %s and isbn %s\n" % (comic.barcode.string, comic.isbn.string))
+        upc = comic.isbn.string
+        if len(upc) == 14:
+            sys.stderr.write("Comic has long barcode: isbn %s\n" % upc)
+            upc = upc[:-2]
+        ndata['Product:UPC'] = upc
     data.update(ndata)
     Quantity = int(comic.quantity.string)
     if Quantity > config.getint('reqfields', 'quantity'):
