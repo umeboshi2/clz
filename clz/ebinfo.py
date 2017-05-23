@@ -1,4 +1,6 @@
 import sys
+from datetime import datetime, timedelta
+
 from .base import make_picture_url
 from .desc import make_description, make_title
 from .categoryids import make_superhero_table
@@ -11,6 +13,19 @@ EbayFields = ['Title', 'PicURL',
               'Product:ISBN',
 ]
 
+def parse_sched_time(num, unit):
+    #print "NUM, UNIT", num, unit
+    if unit.lower() == 'd':
+        delta = timedelta(days=num)
+    elif unit.lower() == 'h':
+        delta = timedelta(hours=num)
+    elif unit.lower() == 'm':
+        delta = timedelta(minutes=num)
+    schedtime = datetime.now() + delta
+    sformat = "%Y-%m-%d %H:%M:%S"
+    return schedtime.strftime(sformat)
+        
+    
 def makeCommonData(config):
     CommonData = dict()
     # we will use PostalCode for location
@@ -32,7 +47,14 @@ def makeCommonData(config):
     if need_rlocation and not rlocation:
         raise RuntimeError, "another problem"
     for field in config.options('optfields'):
-        CommonData[field] = config.get('optfields', field)
+        if field == 'scheduletime':
+            value = config.get('optfields', field)
+            num, unit = int(value[:-1]), value[-1]
+            #print "Value", value, num, unit
+            if num:
+                CommonData[field] = parse_sched_time(num, unit)
+        else:
+            CommonData[field] = config.get('optfields', field)
     return CommonData
 
 def make_age_range(config, age):
@@ -120,10 +142,22 @@ def makeEbayInfo(config, comic, opts, mgr):
         if len(upc) == 14:
             sys.stderr.write("Comic has long barcode: isbn %s\n" % upc)
             upc = upc[:-2]
+        elif len(upc) == 13:
+            sys.stderr.write("Comic has 13 digit barcode: isbn %s\n" % upc)
+            upc = upc[1:]
         ndata['Product:UPC'] = upc
     data.update(ndata)
     Quantity = int(comic.quantity.string)
     if Quantity > config.getint('reqfields', 'quantity'):
         data['*Quantity'] = Quantity
     data['*Category'] = get_category_id(config, comic, opts)
+    if comic.currentprice is not None:
+        try:
+            currentprice = comic.currentprice.string.strip()
+        except AttributeError:
+            import pdb ; pdb.set_trace()
+        if currentprice:
+            while currentprice.startswith('$'):
+                currentprice = currentprice[1:]
+            data["*Startprice"] = currentprice
     return data
