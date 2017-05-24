@@ -1,11 +1,15 @@
 from mako.template import Template
+import markdown
 
-MAXDESCRIPTIONLENGTH = 32765
+#MAXDESCRIPTIONLENGTH = 32765
+MAXDESCRIPTIONLENGTH = 499999
 
 def make_description(config, comic):
     templatefile = config.get('main', 'template')
     t = Template(file(templatefile).read())
     desc = t.render(comic=comic)
+    if config.getboolean('main', 'md_template'):
+        desc = markdown.markdown(desc, safe_mode='escape')
     desc = desc.replace('\n', '')
     if len(desc) > MAXDESCRIPTIONLENGTH:
         raise RuntimeError, "Max Description length exceeded for comic", comic.id
